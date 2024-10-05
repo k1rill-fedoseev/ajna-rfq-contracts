@@ -26,7 +26,7 @@ contract AjnaRFQTest is Test {
     function setUp() public {
         rfq = new AjnaRFQ(address(this), 0.2 ether);
         quote = IERC20(address(deployMockERC20("Quote", "Q", 18)));
-        pool = new AjnaPoolMock(address(quote));
+        pool = new AjnaPoolMock(address(quote), makeAddr("collateral"));
 
         (maker, makerKey) = makeAddrAndKey("maker");
         taker = makeAddr("taker");
@@ -187,7 +187,7 @@ contract AjnaRFQTest is Test {
 
     function testNativeFills() public {
         quote = IERC20(address(new WETH9()));
-        pool = new AjnaPoolMock(address(quote));
+        pool = new AjnaPoolMock(address(quote), makeAddr("collateral"));
         pool.setBucketExchangeRate(1234, 2 ether);
 
         IAjnaRFQ.Order memory order = _makeOrder(true);
@@ -433,7 +433,7 @@ contract AjnaRFQTest is Test {
 
     function testLowerDecimalTakes() public {
         quote = IERC20(address(deployMockERC20("Quote", "Q", 8)));
-        pool = new AjnaPoolMock(address(quote));
+        pool = new AjnaPoolMock(address(quote), makeAddr("collateral"));
         pool.setBucketExchangeRate(1234, 2 ether);
 
         IAjnaRFQ.Order memory order = _makeOrder(true);
@@ -461,7 +461,7 @@ contract AjnaRFQTest is Test {
 
     function testReverseLowerDecimalTakes() public {
         quote = IERC20(address(deployMockERC20("Quote", "Q", 8)));
-        pool = new AjnaPoolMock(address(quote));
+        pool = new AjnaPoolMock(address(quote), makeAddr("collateral"));
         pool.setBucketExchangeRate(1234, 2 ether);
 
         IAjnaRFQ.Order memory order = _makeOrder(false);
@@ -500,6 +500,12 @@ contract AjnaRFQTest is Test {
             pool.setLP(1234, taker, 6 ether);
             _approveLP(taker);
         }
+        address[] memory transferors = new address[](1);
+        transferors[0] = address(rfq);
+        vm.prank(maker);
+        pool.approveLPTransferors(transferors);
+        vm.prank(taker);
+        pool.approveLPTransferors(transferors);
         return IAjnaRFQ.Order({
             lpOrder: lpOrder_,
             maker: maker,
@@ -535,11 +541,7 @@ contract AjnaRFQTest is Test {
         indices[0] = 1234;
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = type(uint256).max;
-        address[] memory transferors = new address[](1);
-        transferors[0] = address(rfq);
-        vm.startPrank(addr_);
-        pool.approveLPTransferors(transferors);
+        vm.prank(addr_);
         pool.increaseLPAllowance(address(rfq), indices, amounts);
-        vm.stopPrank();
     }
 }

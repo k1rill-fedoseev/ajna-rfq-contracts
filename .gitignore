@@ -17,3 +17,6 @@ docs/
 lcov.info
 report/
 .gas-snapshot
+
+# Tests
+state
