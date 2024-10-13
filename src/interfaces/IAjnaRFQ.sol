@@ -24,14 +24,23 @@ interface IAjnaRFQ {
     event FilledOrder(bytes32 indexed hash, address indexed taker, Order order, uint256 lpAmount, uint256 quoteAmount);
 
     struct Order {
+        // @dev True, when maker sells LP for quote tokens, false for opposite.
         bool lpOrder;
+        // @dev Address of the maker, LP and quote tokens for maker are sent to/from it, signature is validated against it too.
         address maker;
+        // @dev Address of the taker allowed to fill order, zero address for no restrictions.
         address taker;
+        // @dev Address of the Ajna ERC20 pool to sell/buy LP from. Quote token address is retrieved from here.
         address pool;
+        // @dev For LP => quote orders, index of the sold LP Ajna bucket. For quote => LP orders, min bucket index that maker will accept.
         uint256 index;
+        // @dev Total amount of LP or quote tokens maker is willing to sell.
         uint256 makeAmount;
+        // @dev Min amount of LP or quote tokens maker is willing to sell. If less than makeAmount, partial fills will be allowed.
         uint256 minMakeAmount;
+        // @dev Order expiration timestamp.
         uint256 expiry;
+        // @dev LP price in quote tokens at which maker is selling/buying LP, as a percentage of 1e18. e.g. 0.99e18 means 1% discount to the primary market.
         uint256 price;
     }
 
